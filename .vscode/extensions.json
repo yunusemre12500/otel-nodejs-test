@@ -1,0 +1,9 @@
+{
+	"recommendations": [
+		"bond.better-comments",
+		"dbaeumer.vscode-eslint",
+		"eamodio.gitlens",
+		"editorconfig.editorconfig"
+	],
+	"unwantedRecommendations": []
+}

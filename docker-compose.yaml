@@ -1,0 +1,131 @@
+networks:
+  tracing:
+    name: tracing
+
+services:
+  jaeger-collector:
+    command:
+      - --cassandra.keyspace=jaeger_v1_dc1
+      - --cassandra.servers=cassandra:9042
+    container_name: jaeger-collector
+    cpu_count: 1
+    environment:
+      SPAN_STORAGE_TYPE: cassandra
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    expose:
+      - 4317
+      - 4318
+    extends:
+      file: ./docker-compose.base.yaml
+      service: service-base
+    healthcheck:
+      interval: 15s
+      retries: 3
+      test: wget --no-verbose --tries=1 --spider http://localhost:14269 || exit 1
+      timeout: 5s
+    hostname: jaeger-collector
+    image: jaegertracing/jaeger-collector:1.57.0
+    mem_limit: 128mb
+    mem_reservation: 0
+    mem_swappiness: 0
+    memswap_limit: 0
+    networks:
+      - tracing
+
+  jaeger-query:
+    command:
+      - --cassandra.keyspace=jaeger_v1_dc1
+      - --cassandra.servers=cassandra:9042
+    container_name: jaeger-query
+    cpu_count: 1
+    depends_on:
+      jaeger-collector:
+        condition: service_healthy
+    extends:
+      file: ./docker-compose.base.yaml
+      service: service-base
+    image: jaegertracing/jaeger-query:1.57.0
+    mem_limit: 128mb
+    mem_reservation: 0
+    mem_swappiness: 0
+    memswap_limit: 0
+    networks:
+      - tracing
+    ports:
+      - 16686:16686/tcp
+      - 16687:16687/tcp
+
+  cassandra:
+    container_name: cassandra
+    expose:
+      - 9042
+    extends:
+      file: ./docker-compose.base.yaml
+      service: service-base
+    healthcheck:
+      interval: 15s
+      retries: 10
+      test: cqlsh -u cassandra -p cassandra
+    hostname: cassandra
+    image: cassandra:5.0
+    mem_limit: 1024mb
+    mem_reservation: 0
+    mem_swappiness: 0
+    memswap_limit: 0
+    networks:
+      - tracing
+    privileged: true
+    read_only: false
+    tmpfs:
+      - /tmp
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+  cassandra-schema:
+    container_name: cassandra-schema
+    cpu_count: 1
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    extends:
+      file: ./docker-compose.base.yaml
+      service: service-base
+    image: jaegertracing/jaeger-cassandra-schema
+    mem_limit: 128mb
+    mem_reservation: 0
+    mem_swappiness: 0
+    memswap_limit: 0
+    networks:
+      - tracing
+    restart: on-failure
+  otel-test-api-server:
+    build:
+      context: .
+      tags:
+        - otel-test-api-server
+    container_name: otel-test-api-server
+    cpu_count: 1
+    depends_on:
+      jaeger-collector:
+        condition: service_healthy
+    environment:
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: jaeger-collector:4317
+      OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: gzip
+      OTEL_EXPORTER_OTLP_TRACES_INSECURE: true
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: grpc
+      OTEL_LOG_LEVEL: debug
+    extends:
+      file: ./docker-compose.base.yaml
+      service: service-base
+    mem_limit: 128mb
+    mem_reservation: 0
+    mem_swappiness: 0
+    memswap_limit: 0
+    networks:
+      - tracing
+    ports:
+      - 3000:3000/tcp
+
+volumes:
+  cassandra-data:

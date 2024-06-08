@@ -1,0 +1,11 @@
+.git/
+.vscode/
+dist/
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
+.prettierignore
+.prettierrc
+docker-compose*.yaml
+Dockerfile

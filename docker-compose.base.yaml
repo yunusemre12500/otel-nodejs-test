@@ -1,0 +1,14 @@
+services:
+  service-base:
+    attach: false
+    cap_drop: [ALL]
+    init: false
+    oom_kill_disable: false
+    oom_score_adj: -999
+    privileged: false
+    pull_policy: if_not_present
+    read_only: true
+    restart: unless-stopped
+    runtime: runsc
+    stdin_open: false
+    tty: false
