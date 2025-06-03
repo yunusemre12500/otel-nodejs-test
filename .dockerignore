@@ -1,11 +1,12 @@
-.git/
-.vscode/
-dist/
-.dockerignore
+.direnv
+.vscode
 .editorconfig
+.envrc
 .gitattributes
 .gitignore
 .prettierignore
 .prettierrc
-docker-compose*.yaml
+docker-compose.base.yaml
+docker-compose.yaml
 Dockerfile
+flake.*

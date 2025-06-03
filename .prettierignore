@@ -1,3 +1,10 @@
-.next
-dist
-node_modules
+.direnv
+.envrc
+.gitattributes
+.gitignore
+.prettierignore
+docker-compose.base.yaml
+docker-compose.yaml
+Dockerfile
+flake.*
+pnpm-lock.yaml
